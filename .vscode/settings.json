@@ -1,0 +1,13 @@
+{
+  "search.exclude": {
+    "**/.kilo": true,
+    "**/.next": true,
+    "**/node_modules": true
+  },
+  "files.watcherExclude": {
+    "**/.kilo/**": true,
+    "**/.next/**": true,
+    "**/node_modules/**": true
+  },
+  "css.customData": []
+}
