@@ -13,3 +13,10 @@ logs/
 devlog.txt
 dev_output.txt
 
+
+# Kilo Code files
+.kilo/
+
+# AI assistant docs
+CLAUDE.md
+AGENTS.md

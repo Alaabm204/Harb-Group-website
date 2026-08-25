@@ -36,7 +36,7 @@ import type {
 import type { Lang } from "@/i18n/translations"
 import { useLang } from "@/context/LanguageContext"
 
-export const API_URL = "https://harb-group.vercel.app/api/v1"
+export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://harb-group.vercel.app/api/v1"
 
 /* Generic response wrapper types */
 
