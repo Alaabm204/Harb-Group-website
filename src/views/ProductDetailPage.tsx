@@ -26,7 +26,7 @@ export default function ProductDetailPage() {
         <section className="py-16 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <Skeleton className="h-6 mb-8 w-40" />
-            <div className="grid lg:grid-cols-2 gap-12">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
               <Skeleton className="h-72 md:h-96 rounded" />
               <div>
                 <Skeleton className="h-8 mb-4 w-2/3" />
@@ -66,16 +66,16 @@ export default function ProductDetailPage() {
             <span>{lang === "en" ? "Back to Products" : "العودة إلى المنتجات"}</span>
           </button>
 
-          <div className="grid lg:grid-cols-2 gap-12" dir={isRtl ? "rtl" : "ltr"}>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12" dir={isRtl ? "rtl" : "ltr"}>
             {/* Images */}
-            <div>
+            <div className="min-w-0">
               {product.images.length > 0 && (
                 <>
                   <div className="rounded overflow-hidden h-72 md:h-96 bg-gray-100 mb-3">
                     <img src={product.images[Math.min(activeImg, product.images.length - 1)]} alt={name} className="w-full h-full object-cover" />
                   </div>
                   {product.images.length > 1 && (
-                    <div ref={thumbsRef} className="flex gap-3 overflow-x-auto pb-1 -mb-1">
+                    <div ref={thumbsRef} className="flex w-full max-w-full gap-3 overflow-x-auto pb-1 -mb-1">
                       {product.images.map((img, i) => (
                         <button key={i} onClick={() => setActiveImg(i)} className={`h-16 w-24 flex-shrink-0 rounded overflow-hidden border-2 transition-colors ${i === activeImg ? "border-[#e07840]" : "border-transparent"}`}>
                           <img src={img} alt="" className="w-full h-full object-cover" />
@@ -93,7 +93,7 @@ export default function ProductDetailPage() {
             </div>
 
             {/* Info */}
-            <div className={isRtl ? "text-right" : "text-left"}>
+            <div className={"min-w-0 " + (isRtl ? "text-right" : "text-left")}>
               <h1 className="text-2xl md:text-3xl font-bold text-[#1a5c8a] mb-4">{name}</h1>
               {desc && <p className="text-gray-600 leading-relaxed mb-8">{desc}</p>}
               {specs && (

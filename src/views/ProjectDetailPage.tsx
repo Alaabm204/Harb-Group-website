@@ -28,7 +28,7 @@ export default function ProjectDetailPage() {
             <Skeleton className="h-6 mb-8 w-40" />
             <Skeleton className="h-8 mb-8 w-2/3" />
             <Skeleton className="h-72 md:h-[28rem] rounded mb-3" />
-            <div className="flex gap-3 mb-10 overflow-x-auto pb-1 -mb-1">
+            <div className="flex w-full max-w-full gap-3 mb-10 overflow-x-auto pb-1 -mb-1">
               <Skeleton className="h-16 w-24 rounded" />
               <Skeleton className="h-16 w-24 rounded" />
             </div>
@@ -75,7 +75,7 @@ export default function ProjectDetailPage() {
                 <img src={allImages[safeActiveImg]} alt={name} className="w-full h-full object-cover" />
               </div>
               {allImages.length > 1 && (
-                <div ref={thumbsRef} className="flex gap-3 mb-10 overflow-x-auto pb-1 -mb-1">
+                <div ref={thumbsRef} className="flex w-full max-w-full gap-3 mb-10 overflow-x-auto pb-1 -mb-1">
                   {allImages.map((img, i) => (
                     <button key={i} onClick={() => setActiveImg(i)} className={`h-16 w-24 flex-shrink-0 rounded overflow-hidden border-2 transition-colors ${i === safeActiveImg ? "border-[#e07840]" : "border-transparent"}`}>
                       <img src={img} alt="" className="w-full h-full object-cover" />
@@ -88,7 +88,7 @@ export default function ProjectDetailPage() {
 
           {/* Meta */}
           {(clientName || project.completionYear) && (
-            <div className={`grid sm:grid-cols-2 gap-6 mb-10 ${isRtl ? "text-right" : "text-left"}`}>
+            <div className={`grid grid-cols-1 sm:grid-cols-2 gap-6 mb-10 ${isRtl ? "text-right" : "text-left"}`}>
               {clientName && (
                 <div className="bg-[#f5f7fa] rounded p-5 border border-gray-100">
                   <p className="text-xs text-gray-400 mb-1">{lang === "en" ? "Client" : "العميل"}</p>
