@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { useLang } from "@/context/LanguageContext"
 import Footer from "@/components/Footer"
@@ -12,6 +12,13 @@ export default function ProductDetailPage() {
   const navigate = useNavigate()
   const [activeImg, setActiveImg] = useState(0)
   const { data: product, loading } = useProduct(id)
+
+  const thumbsRef = useRef<HTMLDivElement>(null)
+
+  useEffect(function () {
+    const el = thumbsRef.current ? thumbsRef.current.children[activeImg] : null
+    if (el) el.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" })
+  }, [activeImg])
 
   if (loading) {
     return (
@@ -68,9 +75,9 @@ export default function ProductDetailPage() {
                     <img src={product.images[Math.min(activeImg, product.images.length - 1)]} alt={name} className="w-full h-full object-cover" />
                   </div>
                   {product.images.length > 1 && (
-                    <div className="flex gap-3">
+                    <div ref={thumbsRef} className="flex gap-3 overflow-x-auto pb-1 -mb-1">
                       {product.images.map((img, i) => (
-                        <button key={i} onClick={() => setActiveImg(i)} className={`h-16 w-24 rounded overflow-hidden border-2 transition-colors ${i === activeImg ? "border-[#e07840]" : "border-transparent"}`}>
+                        <button key={i} onClick={() => setActiveImg(i)} className={`h-16 w-24 flex-shrink-0 rounded overflow-hidden border-2 transition-colors ${i === activeImg ? "border-[#e07840]" : "border-transparent"}`}>
                           <img src={img} alt="" className="w-full h-full object-cover" />
                         </button>
                       ))}

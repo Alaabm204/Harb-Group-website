@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { useLang } from "@/context/LanguageContext"
 import Footer from "@/components/Footer"
@@ -13,6 +13,13 @@ export default function ProjectDetailPage() {
   const [activeImg, setActiveImg] = useState(0)
   const { data: project, loading } = useProject(id)
 
+  const thumbsRef = useRef<HTMLDivElement>(null)
+
+  useEffect(function () {
+    const el = thumbsRef.current ? thumbsRef.current.children[activeImg] : null
+    if (el) el.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" })
+  }, [activeImg])
+
   if (loading) {
     return (
       <main className="pt-20 min-h-screen" style={{ fontFamily: isRtl ? "'Cairo', sans-serif" : "'Inter', sans-serif" }}>
@@ -21,7 +28,7 @@ export default function ProjectDetailPage() {
             <Skeleton className="h-6 mb-8 w-40" />
             <Skeleton className="h-8 mb-8 w-2/3" />
             <Skeleton className="h-72 md:h-[28rem] rounded mb-3" />
-            <div className="flex gap-3 mb-10">
+            <div className="flex gap-3 mb-10 overflow-x-auto pb-1 -mb-1">
               <Skeleton className="h-16 w-24 rounded" />
               <Skeleton className="h-16 w-24 rounded" />
             </div>
@@ -68,9 +75,9 @@ export default function ProjectDetailPage() {
                 <img src={allImages[safeActiveImg]} alt={name} className="w-full h-full object-cover" />
               </div>
               {allImages.length > 1 && (
-                <div className="flex gap-3 mb-10">
+                <div ref={thumbsRef} className="flex gap-3 mb-10 overflow-x-auto pb-1 -mb-1">
                   {allImages.map((img, i) => (
-                    <button key={i} onClick={() => setActiveImg(i)} className={`h-16 w-24 rounded overflow-hidden border-2 transition-colors ${i === safeActiveImg ? "border-[#e07840]" : "border-transparent"}`}>
+                    <button key={i} onClick={() => setActiveImg(i)} className={`h-16 w-24 flex-shrink-0 rounded overflow-hidden border-2 transition-colors ${i === safeActiveImg ? "border-[#e07840]" : "border-transparent"}`}>
                       <img src={img} alt="" className="w-full h-full object-cover" />
                     </button>
                   ))}

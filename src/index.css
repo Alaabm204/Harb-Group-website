@@ -140,3 +140,9 @@ body {
 .animate-delay-500 { animation-delay: 0.5s; }
 
 .opacity-0 { opacity: 0; }
+
+/* Horizontal safety net: no element may stretch the page sideways */
+html, body {
+  overflow-x: hidden;
+  overflow-x: clip;
+}
