@@ -262,8 +262,12 @@ export function fetchHomepage(
 }> {
   return request<ApiHomepage>("/homepage", lang).then((d) => ({
     hero: adaptHeroData(d.hero),
-    featuredProducts: (d.featuredProducts ?? []).map(adaptFeaturedProduct),
-    featuredProjects: (d.featuredProjects ?? []).map(adaptFeaturedProject),
+    featuredProducts: (d.featuredProducts ?? [])
+      .map(adaptFeaturedProduct)
+      .sort(function(a,b){return(a.displayOrder-b.displayOrder)}),
+    featuredProjects: (d.featuredProjects ?? [])
+      .map(adaptFeaturedProject)
+      .sort(function(a,b){return(a.displayOrder-b.displayOrder)}),
   }))
 }
 

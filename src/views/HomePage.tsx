@@ -7,14 +7,12 @@ import ClientsSection from "@/components/ClientsSection"
 import ContactCTA from "@/components/ContactCTA"
 import Footer from "@/components/Footer"
 import HomePageSkeleton from "@/components/HomePageSkeleton"
-import { useAbout, useClients, useHomepage, useProducts, useProjects, useServices } from "@/lib/api"
+import { useAbout, useClients, useHomepage, useServices } from "@/lib/api"
 
 export default function HomePage() {
   const { data: homepageData, loading: heroLoading } = useHomepage()
   const { data: about, loading: aboutLoading } = useAbout()
   const { data: services, loading: servicesLoading } = useServices()
-  const { data: products, loading: productsLoading } = useProducts()
-  const { data: projects, loading: projectsLoading } = useProjects()
   const { data: clients, loading: clientsLoading } = useClients("active")
 
   /* Hold back every section until ALL homepage requests have settled,
@@ -23,11 +21,11 @@ export default function HomePage() {
     heroLoading ||
     aboutLoading ||
     servicesLoading ||
-    productsLoading ||
-    projectsLoading ||
     clientsLoading
 
-  const featuredProjects = projects ?? []
+  /* Featured products and projects are curated via the admin app. */
+  const featuredProducts = homepageData?.featuredProducts ?? []
+  const featuredProjects = homepageData?.featuredProjects ?? []
   const activeClients = clients ?? []
 
   return (
@@ -39,7 +37,9 @@ export default function HomePage() {
           {homepageData ? <HeroSection data={homepageData.hero} /> : null}
           {about ? <AboutSection data={about} /> : null}
           <ServicesSection services={services ?? []} />
-          <ProductsSection products={products ?? []} />
+          {featuredProducts.length !== 0 ? (
+            <ProductsSection products={featuredProducts} />
+          ) : null}
           {featuredProjects.length !== 0 ? (
             <ProjectsSection projects={featuredProjects} />
           ) : null}
