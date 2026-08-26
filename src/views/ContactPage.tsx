@@ -7,6 +7,51 @@ import Skeleton from "@/components/Skeleton"
 import { useCompanyInfo, submitContact } from "@/lib/api"
 
 type FormState = "idle" | "loading" | "success" | "error"
+/**
+* Converts any admin-entered Google Maps link into an iframe-safe embed URL (normal map pages are blocked by Google and render as refused-to-connect).
+*/
+function toMapsEmbedUrl(raw: string, fallbackQuery?: string): string {
+  const enc = encodeURIComponent
+  const fq = (fallbackQuery ?? "").trim()
+  
+  const search = (q: string) =>
+    "https://www.google.com/maps?q=" + enc(q) + "&output=embed"
+  
+  const value = (raw ?? "").trim()
+  if (!value) return ""
+  try {
+    const url = new URL(value)
+    if (url.protocol !== "http:" && url.protocol !== "https:") return ""
+    /* Already embeddable links pass through untouched */
+    if (url.pathname.includes("/maps/embed")) return url.toString()
+    if (url.searchParams.get("output") === "embed") return url.toString()
+    /* Short goo.gl links cannot be resolved in the browser */
+    if (url.hostname.includes("goo.gl")) return fq ? search(fq) : ""
+    /* Reuse an explicit search term when present */
+    const q = url.searchParams.get("query") ?? url.searchParams.get("q")
+    if (q) return "https://www.google.com/maps?q=" + enc(q) + "&output=embed"
+    /* Coordinates from the @lat,lng fragment of place links */
+    const at = value.indexOf("@")
+    if (at !== -1) {
+      const pair = value.slice(at + 1).split(",")
+      const lat = Number(pair[0])
+      const lng = Number(pair[1])
+      if (Number.isFinite(lat) && Number.isFinite(lng)) {
+        return "https://www.google.com/maps?q=" + lat + "," + lng + "&output=embed"
+      }
+    }
+    /* Place name links under maps/place */
+    const parts = url.pathname.split("/")
+    const pi = parts.indexOf("place")
+    if (pi !== -1 && parts[pi + 1]) {
+      return search(decodeURIComponent(parts[pi + 1].split("+").join(" ")))
+    }
+    return fq ? search(fq) : ""
+  } catch {
+    /* Plain text or bare coordinates are used as the search term */
+    return search(value)
+  }  }
+
 
 const SocialIcon = ({ platform }: { platform: string }) => {
   const p = platform.toLowerCase()
@@ -85,18 +130,11 @@ export default function ContactPage() {
   // Social links come from the company-info API
   const socialLinks = companyInfo?.socialLinks ?? []
 
-  // Build an embeddable maps URL from the API-provided googleMapsUrl
-  const mapsEmbedUrl = (() => {
-    const raw = companyInfo?.googleMapsUrl
-    if (!raw) return ""
-    try {
-      const url = new URL(raw)
-      url.searchParams.set("output", "embed")
-      return url.toString()
-    } catch {
-      return ""
-    }
-  })()
+  //   // Build an embeddable maps URL
+  const mapsEmbedUrl = toMapsEmbedUrl(
+    companyInfo?.googleMapsUrl ?? "",
+    companyInfo?.addressEn,
+  )
 
   return (
     <main className="pt-20" style={{ fontFamily: isRtl ? "'Cairo', sans-serif" : "'Inter', sans-serif" }}>
