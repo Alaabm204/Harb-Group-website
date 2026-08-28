@@ -36,7 +36,7 @@ import type {
 import type { Lang } from "@/i18n/translations"
 import { useLang } from "@/context/LanguageContext"
 
-export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://harb-group.vercel.app/api/v1"
+export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://harb-group.onrender.com/api/v1"
 
 /* Generic response wrapper types */
 
@@ -230,7 +230,7 @@ export function fetchClients(
   status?: "active" | "inactive",
   lang: Lang = "en",
 ): Promise<Client[]> {
-  const qs = status ? `?status=${status}` : "?status=active"
+  const qs = status ? `?status=${status}` : "?status=inactive"
   return request<{ clients: ApiClient[] }>(`/clients${qs}`, lang).then((d) =>
     d.clients.map(adaptClient).sort((a, b) => a.displayOrder - b.displayOrder),
   )
