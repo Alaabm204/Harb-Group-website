@@ -99,6 +99,7 @@ export default function ContactPage() {
     const e: Partial<typeof form> = {}
     if (!form.name.trim()) e.name = lang === "en" ? "Name is required" : "الاسم مطلوب"
     if (!form.email.trim()) e.email = lang === "en" ? "Email is required" : "البريد الإلكتروني مطلوب"
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) e.email = lang === "en" ? "Please enter a valid email address" : "يرجى إدخال بريد إلكتروني صحيح"
     if (!form.phone.trim()) e.phone = lang === "en" ? "Phone is required" : "رقم الهاتف مطلوب"
     if (!form.message.trim()) e.message = lang === "en" ? "Message is required" : "الرسالة مطلوبة"
     return e
@@ -111,17 +112,18 @@ export default function ContactPage() {
     setErrors({})
     setStatus("loading")
     try {
+      /* Subject is optional server-side: omit the key entirely when left blank. */
       await submitContact({
         name: form.name.trim(),
         email: form.email.trim(),
         phone: form.phone.trim(),
-        subject: form.subject.trim(),
+        subject: form.subject.trim() || undefined,
         message: form.message.trim(),
       })
       setStatus("success")
     } catch (err) {
-      /* Surface per-field validation errors returned by the API; fall back to the
-         rate-limit or generic message when no field-specific errors came back. */
+      /* Surface per-field validation errors returned by the API, then pick the
+         clearest message for whatever actually went wrong. */
       const fieldErrors: Partial<typeof form> = {}
       if (err instanceof ApiError && err.fields) {
         for (const [field, message] of Object.entries(err.fields)) {
@@ -129,13 +131,22 @@ export default function ContactPage() {
         }
       }
       setErrors(fieldErrors)
-      setNotice(
-        Object.keys(fieldErrors).length > 0
-          ? null
-          : err instanceof ApiError && err.status === 429
-            ? tx(t.contact.rateLimited, lang)
-            : null,
-      )
+
+      if (Object.keys(fieldErrors).length > 0) {
+        setNotice(tx(t.contact.fixFields, lang))
+      } else if (err instanceof ApiError && err.status === 429) {
+        setNotice(tx(t.contact.rateLimited, lang))
+      } else if (err instanceof ApiError && err.status !== undefined && err.status >= 500) {
+        setNotice(tx(t.contact.server, lang))
+      } else if (err instanceof ApiError && err.message) {
+        /* The API's own returned message (e.g. other 400s, success:false responses). */
+        setNotice(err.message)
+      } else if (err instanceof ApiError) {
+        setNotice(tx(t.contact.error, lang))
+      } else {
+        /* fetch() itself failed (offline, DNS, connection refused). */
+        setNotice(tx(t.contact.network, lang))
+      }
       setStatus("error")
     }
   }
@@ -187,7 +198,7 @@ export default function ContactPage() {
                   <div className="grid sm:grid-cols-2 gap-5">
                     <div>
                       <label className={labelCls}>{tx(t.contact.name, lang)}</label>
-                      <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className={inputCls("name")} dir={isRtl ? "rtl" : "ltr"} />
+                      <input type="text" maxLength={100} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className={inputCls("name")} dir={isRtl ? "rtl" : "ltr"} />
                       {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
                     </div>
                     <div>
@@ -211,7 +222,7 @@ export default function ContactPage() {
                     <textarea rows={5} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} className={inputCls("message")} dir={isRtl ? "rtl" : "ltr"} />
                     {errors.message && <p className="text-red-500 text-xs mt-1">{errors.message}</p>}
                   </div>
-                  {status === "error" && <p className="text-red-500 text-sm">{notice ?? tx(t.contact.error, lang)}</p>}
+                  {status === "error" && <p className="text-red-500 text-sm">{notice}</p>}
                   <button type="submit" disabled={status === "loading"} className="w-full py-3.5 bg-[#1a5c8a] text-white font-semibold rounded hover:bg-[#124069] transition-colors disabled:opacity-60">
                     {status === "loading" ? tx(t.contact.sending, lang) : tx(t.contact.send, lang)}
                   </button>

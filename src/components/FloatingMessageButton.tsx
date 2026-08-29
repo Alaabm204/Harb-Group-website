@@ -1,9 +1,13 @@
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useLocation } from "react-router-dom"
 import { useLang } from "@/context/LanguageContext"
 
 export default function FloatingMessageButton() {
   const navigate = useNavigate()
   const { isRtl } = useLang()
+  const location = useLocation()
+
+  /* Hide the bubble on the contact page itself — it would only point at where you already are. */
+  if (location.pathname === "/contact") return null
 
   return (
     <button

@@ -318,7 +318,7 @@ export async function submitContact(payload: {
   name: string
   email: string
   phone: string
-  subject: string
+  subject?: string
   message: string
 }): Promise<ContactSubmitResponse> {
   const url = `${API_URL}/contact/submit`
