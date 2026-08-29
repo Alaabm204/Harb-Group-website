@@ -4,7 +4,7 @@ import { t, tx } from "@/i18n/translations"
 import SectionHeader from "@/components/SectionHeader"
 import Footer from "@/components/Footer"
 import Skeleton from "@/components/Skeleton"
-import { useCompanyInfo, submitContact } from "@/lib/api"
+import { useCompanyInfo, submitContact, ApiError } from "@/lib/api"
 
 type FormState = "idle" | "loading" | "success" | "error"
 /**
@@ -93,11 +93,13 @@ export default function ContactPage() {
   const [form, setForm] = useState({ name: "", email: "", phone: "", subject: "", message: "" })
   const [status, setStatus] = useState<FormState>("idle")
   const [errors, setErrors] = useState<Partial<typeof form>>({})
+  const [notice, setNotice] = useState<string | null>(null)
 
   const validate = () => {
     const e: Partial<typeof form> = {}
     if (!form.name.trim()) e.name = lang === "en" ? "Name is required" : "الاسم مطلوب"
     if (!form.email.trim()) e.email = lang === "en" ? "Email is required" : "البريد الإلكتروني مطلوب"
+    if (!form.phone.trim()) e.phone = lang === "en" ? "Phone is required" : "رقم الهاتف مطلوب"
     if (!form.message.trim()) e.message = lang === "en" ? "Message is required" : "الرسالة مطلوبة"
     return e
   }
@@ -117,7 +119,23 @@ export default function ContactPage() {
         message: form.message.trim(),
       })
       setStatus("success")
-    } catch {
+    } catch (err) {
+      /* Surface per-field validation errors returned by the API; fall back to the
+         rate-limit or generic message when no field-specific errors came back. */
+      const fieldErrors: Partial<typeof form> = {}
+      if (err instanceof ApiError && err.fields) {
+        for (const [field, message] of Object.entries(err.fields)) {
+          if (field in form) fieldErrors[field as keyof typeof form] = message
+        }
+      }
+      setErrors(fieldErrors)
+      setNotice(
+        Object.keys(fieldErrors).length > 0
+          ? null
+          : err instanceof ApiError && err.status === 429
+            ? tx(t.contact.rateLimited, lang)
+            : null,
+      )
       setStatus("error")
     }
   }
@@ -193,7 +211,7 @@ export default function ContactPage() {
                     <textarea rows={5} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} className={inputCls("message")} dir={isRtl ? "rtl" : "ltr"} />
                     {errors.message && <p className="text-red-500 text-xs mt-1">{errors.message}</p>}
                   </div>
-                  {status === "error" && <p className="text-red-500 text-sm">{tx(t.contact.error, lang)}</p>}
+                  {status === "error" && <p className="text-red-500 text-sm">{notice ?? tx(t.contact.error, lang)}</p>}
                   <button type="submit" disabled={status === "loading"} className="w-full py-3.5 bg-[#1a5c8a] text-white font-semibold rounded hover:bg-[#124069] transition-colors disabled:opacity-60">
                     {status === "loading" ? tx(t.contact.sending, lang) : tx(t.contact.send, lang)}
                   </button>

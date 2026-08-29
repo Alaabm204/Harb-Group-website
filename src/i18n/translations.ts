@@ -56,6 +56,7 @@ export const t = {
     sending: { en: "Sending…", ar: "جارٍ الإرسال…" },
     success: { en: "Your message has been sent successfully. We will get back to you shortly.", ar: "تم إرسال رسالتك بنجاح. سنعود إليك قريباً." },
     error: { en: "Something went wrong. Please try again.", ar: "حدث خطأ ما. يرجى المحاولة مرة أخرى." },
+    rateLimited: { en: "Too many attempts. Please wait a little while before trying again.", ar: "عدد كبير من المحاولات. يرجى الانتظار قليلاً قبل المحاولة مرة أخرى." },
     address: { en: "Address", ar: "العنوان" },
     hours: { en: "Working Hours", ar: "ساعات العمل" },
     follow: { en: "Follow Us", ar: "تابعنا" },

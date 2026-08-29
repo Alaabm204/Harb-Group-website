@@ -49,9 +49,19 @@ export interface ApiSuccessResponse<T> {
 }
 
 export class ApiError extends Error {
-  constructor(message: string) {
+  /** HTTP status code, when the error was raised from a response. */
+  status?: number
+  /** Map of field name -> validation message, from structured API error payloads. */
+  fields?: Record<string, string>
+
+  constructor(
+    message: string,
+    options?: { status?: number; fields?: Record<string, string> },
+  ) {
     super(message)
     this.name = "ApiError"
+    if (options?.status !== undefined) this.status = options.status
+    if (options?.fields !== undefined) this.fields = options.fields
   }
 }
 
@@ -283,6 +293,27 @@ export interface ContactSubmitResponse {
   timestamp: string
 }
 
+/** Shape of the API's error payloads (422 validation, 429 rate limit, etc.). */
+interface ApiErrorPayload {
+  success?: boolean
+  message?: string
+  errors?: Array<{ field?: string | null; message?: string; details?: string }>
+}
+
+/** Builds a { field: message } map from a structured API error payload. */
+function extractFieldErrors(
+  body: ApiErrorPayload | null,
+): Record<string, string> | undefined {
+  if (!body || !Array.isArray(body.errors)) return undefined
+  const fields: Record<string, string> = {}
+  for (const item of body.errors) {
+    if (item && typeof item.field === "string" && item.field) {
+      fields[item.field] = item.message || item.details || "Invalid value"
+    }
+  }
+  return Object.keys(fields).length > 0 ? fields : undefined
+}
+
 export async function submitContact(payload: {
   name: string
   email: string
@@ -299,22 +330,34 @@ export async function submitContact(payload: {
     body: JSON.stringify(payload),
   })
 
+  /* The API always answers with a JSON body, even on failure:
+     { success, message, data: null, errors: [{ field, message, details }], timestamp } */
+  let body: ApiErrorPayload | null = null
+  try {
+    body = (await res.json()) as ApiErrorPayload
+  } catch {
+    body = null
+  }
+
   if (!res.ok) {
-    throw new ApiError(`Request to ${url} failed with status ${res.status}`)
+    if (res.status === 429) {
+      throw new ApiError("Too many contact submissions. Please try again later.", {
+        status: res.status,
+      })
+    }
+    throw new ApiError(
+      body?.message || `Request to ${url} failed with status ${res.status}`,
+      { status: res.status, fields: extractFieldErrors(body) },
+    )
   }
 
-  const json: unknown = await res.json()
-  if (
-    typeof json === "object" &&
-    json !== null &&
-    "success" in json &&
-    (json as { success: unknown }).success === false
-  ) {
-    const err = json as { message?: string; errors?: string[] }
-    throw new ApiError(err.message || "Contact submit failed")
+  if (body?.success === false) {
+    throw new ApiError(body.message || "Contact submit failed", {
+      fields: extractFieldErrors(body),
+    })
   }
 
-  return json as ContactSubmitResponse
+  return body as unknown as ContactSubmitResponse
 }
 
 /* ------------------------------------------------------------------ *
